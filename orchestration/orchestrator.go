@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/go-kit/kit/log"
+	"strings"
 )
 
 type Orchestrator struct {
@@ -21,14 +22,16 @@ type Orchestrator struct {
 	nameToPID   map[string]*actor.PID
 	pidToName   map[*actor.PID]string
 	nameToActor map[string]actorstate.FlowActor
+	parentToChildren map[*actor.PID][]*actor.PID
 }
 
 func NewOrchestrator(cfg config.Config) *Orchestrator {
 	return &Orchestrator{
-		cfg:         cfg,
-		nameToPID:   map[string]*actor.PID{},
-		pidToName:   map[*actor.PID]string{},
-		nameToActor: map[string]actorstate.FlowActor{},
+		cfg:              cfg,
+		nameToPID:        map[string]*actor.PID{},
+		pidToName:        map[*actor.PID]string{},
+		nameToActor:      map[string]actorstate.FlowActor{},
+		parentToChildren: map[*actor.PID][]*actor.PID{},
 	}
 }
 
@@ -115,6 +118,7 @@ func (u *Orchestrator) StartActorSystem(as *actor.ActorSystem, root *actor.RootC
 		if !found {
 			return fmt.Errorf("unable to find %s in name to pid", nodeCfg.Name)
 		}
+		u.parentToChildren[n] = outs
 		u.rootContext.Send(n, actorstate.Init{Children: outs})
 	}
 	// Start the system
@@ -130,4 +134,28 @@ func (u *Orchestrator) addPID(no actorstate.FlowActor) {
 	u.nameToPID[no.Name()] = pid
 	u.pidToName[pid] = no.Name()
 	u.nameToActor[no.Name()] = no
+}
+
+func (u *Orchestrator) GetPlantUML() string {
+	sb := strings.Builder{}
+	sb.WriteString("@startuml \n")
+	for k, _ := range u.nameToPID {
+		sb.WriteString(fmt.Sprintf("[%s] \n", k))
+	}
+
+	for parentName, parentPid := range u.nameToPID {
+		children, found := u.parentToChildren[parentPid]
+		if !found {
+			continue
+		}
+		for _, child := range children {
+			childName, found := u.pidToName[child]
+			if !found {
+				continue
+			}
+			sb.WriteString(fmt.Sprintf("[%s] -> [%s] \n", parentName, childName))
+		}
+	}
+	sb.WriteString("@enduml \n")
+	return sb.String()
 }

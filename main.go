@@ -26,5 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	uml := orch.GetPlantUML()
+	println(uml)
 	time.Sleep(5 * time.Minute)
 }
