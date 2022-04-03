@@ -2,11 +2,14 @@ package components
 
 import (
 	"agentflow/config"
+	"agentflow/types"
 	"agentflow/types/actorstate"
 	"agentflow/types/pogo"
 	"fmt"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/scheduler"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"math/rand"
 	"time"
 )
@@ -17,6 +20,8 @@ type MetricGenerator struct {
 	out    []*actor.PID
 	self   *actor.PID
 	name   string
+	log log.Logger
+	index int
 }
 
 func (mg *MetricGenerator) Output() actorstate.InOutType {
@@ -27,10 +32,11 @@ func (mg *MetricGenerator) AllowableInputs() []actorstate.InOutType {
 	return []actorstate.InOutType{}
 }
 
-func NewMetricGenerator(name string, cfg config.MetricGenerator) (actorstate.FlowActor, error) {
+func NewMetricGenerator(name string, cfg config.MetricGenerator, global *types.Global) (actorstate.FlowActor, error) {
 	return &MetricGenerator{
 		config: cfg,
 		name:   name,
+		log: global.Log,
 	}, nil
 }
 
@@ -62,6 +68,8 @@ func (mg *MetricGenerator) Receive(ctx actor.Context) {
 			copy(cpy, metrics)
 			ctx.Send(o, cpy)
 		}
+		_ = level.Info(mg.log).Log("msg","creating logs","length",len(metrics), "index", mg.index)
+		mg.index++
 	}
 }
 

@@ -1,6 +1,9 @@
 package pogo
 
-import "time"
+import (
+	dto "github.com/prometheus/client_model/go"
+	"time"
+)
 
 type Metric struct {
 	name     string
@@ -25,6 +28,29 @@ func NewMetric(name string, value float64, ts time.Time, labels map[string]strin
 		m.labels = make(map[string]string)
 	}
 	m.labels["__name__"] = name
+	return m
+}
+
+func CopyMetricFromPrometheus(in *dto.MetricFamily) Metric {
+
+	lbls := make(map[string]string)
+	for _, v := range in.Metric[0].Label {
+		lbls[*v.Name] = *v.Value
+	}
+	var val float64
+	if in.Metric[0].Counter != nil {
+		val = *in.Metric[0].Counter.Value
+	} else if in.Metric[0].Gauge != nil {
+		val = *in.Metric[0].Gauge.Value
+	}
+	m := Metric{
+		name:     in.GetName(),
+		value:    val,
+		ts:       time.Now(),
+		labels:   lbls,
+		metadata: nil,
+	}
+	m.labels["__name__"] = in.GetName()
 	return m
 }
 

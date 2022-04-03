@@ -15,6 +15,9 @@ type Node struct {
 	MetricFilter          *MetricFilter      `yaml:"metric_filter,omitempty"`
 	FakeMetricRemoteWrite *FakeRemoteWrite   `yaml:"fake_metric_remote_write,omitempty"`
 	SimpleRemoteWrite     *SimpleRemoteWrite `yaml:"simple_metric_remote_write,omitempty"`
+	AgentLogs             *AgentLogs         `yaml:"agent_logs,omitempty"`
+	LogFileWriter         *LogFileWriter     `yaml:"log_file_writer,omitempty"`
+	Github                *Github            `yaml:"github,omitempty"`
 }
 
 type MetricGenerator struct {
@@ -46,4 +49,16 @@ type Credential struct {
 	URL      string `yaml:"url,omitempty"`
 	Username string `yaml:"username,omitempty"`
 	Password string `yaml:"password,omitempty"`
+}
+
+type AgentLogs struct {
+}
+
+type LogFileWriter struct {
+	Path string `yaml:"path,omitempty"`
+}
+
+type Github struct {
+	ApiURL string `yaml:"api_url,omitempty"`
+	Repositories []string `yaml:"repositories,omitempty"`
 }

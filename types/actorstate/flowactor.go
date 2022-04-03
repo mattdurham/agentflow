@@ -10,6 +10,7 @@ type FlowActor interface {
 	Output() InOutType
 }
 
+
 type InOutType = int
 
 
@@ -17,6 +18,7 @@ const (
 	Metrics InOutType = iota
 	Targets
 	Credentials
+	Logs
 	None
 )
 
