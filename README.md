@@ -43,7 +43,7 @@ nodes:
   - rw
 ```
 
-The above generates
+The above generates the follow PlantUML
 
 ```
 @startuml 
@@ -62,5 +62,24 @@ The above generates
 @enduml 
 ```
 
-Which is rendered as
 ![](./assets/graph.png)
+
+It also generates the following Mermaid
+
+```mermaid
+graph LR 
+	FILTER[filter - *components.MetricFilter] 
+	FILTER2[filter2 - *components.MetricFilter] 
+	RW[rw - *remotewrites.SimpleMetric] 
+	FILEWRITER[filewriter - *logs.FileWriter] 
+	GITHUB[github - *integrations.Github] 
+	AGENT_LOGS[agent_logs - *logs.Agent] 
+	GENERATOR[generator - *components.MetricGenerator] 
+	AGENT_LOGS --> FILEWRITER 
+	GENERATOR --> FILTER 
+	FILTER --> FILTER2 
+	FILTER2 --> RW 
+	GITHUB --> RW 
+```
+
+![](./assets/mermaid.png)

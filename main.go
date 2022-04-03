@@ -26,7 +26,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	uml := orch.GetPlantUML()
+	uml := orch.GeneratePlantUML()
 	println(uml)
+	mermaid := orch.GenerateMermaid()
+	println(mermaid)
 	time.Sleep(5 * time.Minute)
 }

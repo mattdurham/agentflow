@@ -17,11 +17,11 @@ import (
 type Orchestrator struct {
 	cfg config.Config
 
-	actorSystem *actor.ActorSystem
-	rootContext *actor.RootContext
-	nameToPID   map[string]*actor.PID
-	pidToName   map[*actor.PID]string
-	nameToActor map[string]actorstate.FlowActor
+	actorSystem      *actor.ActorSystem
+	rootContext      *actor.RootContext
+	nameToPID        map[string]*actor.PID
+	pidToName        map[*actor.PID]string
+	nameToActor      map[string]actorstate.FlowActor
 	parentToChildren map[*actor.PID][]*actor.PID
 }
 
@@ -136,7 +136,7 @@ func (u *Orchestrator) addPID(no actorstate.FlowActor) {
 	u.nameToActor[no.Name()] = no
 }
 
-func (u *Orchestrator) GetPlantUML() string {
+func (u *Orchestrator) GeneratePlantUML() string {
 	sb := strings.Builder{}
 	sb.WriteString("@startuml \n")
 	for k, _ := range u.nameToPID {
@@ -157,5 +157,29 @@ func (u *Orchestrator) GetPlantUML() string {
 		}
 	}
 	sb.WriteString("@enduml \n")
+	return sb.String()
+}
+
+func (u *Orchestrator) GenerateMermaid() string {
+	sb := strings.Builder{}
+	sb.WriteString("graph LR \n")
+	for nodeName, _ := range u.nameToPID {
+		act := u.nameToActor[nodeName]
+		sb.WriteString(fmt.Sprintf("\t%s[%s - %T] \n", strings.ToTitle(nodeName), nodeName, act))
+	}
+
+	for parentName, parentPid := range u.nameToPID {
+		children, found := u.parentToChildren[parentPid]
+		if !found {
+			continue
+		}
+		for _, child := range children {
+			childName, found := u.pidToName[child]
+			if !found {
+				continue
+			}
+			sb.WriteString(fmt.Sprintf("\t%s --> %s \n", strings.ToTitle(parentName), strings.ToTitle(childName)))
+		}
+	}
 	return sb.String()
 }
