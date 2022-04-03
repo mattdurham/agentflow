@@ -4,9 +4,11 @@ import (
 	"agentflow/config"
 	"agentflow/orchestration"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	"time"
+	"log"
+	"net/http"
 )
 
 func main() {
@@ -26,9 +28,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	uml := orch.GeneratePlantUML()
-	println(uml)
-	mermaid := orch.GenerateMermaid()
-	println(mermaid)
-	time.Sleep(5 * time.Minute)
+	router := mux.NewRouter()
+	router.HandleFunc("/mermaid", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(orch.GenerateMermaid()))
+	})
+
+	router.HandleFunc("/nodes", func(w http.ResponseWriter, r *http.Request) {
+		bb, _ := yaml.Marshal(orch.NodeList())
+		w.Write(bb)
+	})
+
+	router.HandleFunc("/nodes/{name}", func(writer http.ResponseWriter, request *http.Request) {
+		vars := mux.Vars(request)
+		key := vars["name"]
+		writer.Write(orch.GetNodeStatus(key))
+
+	})
+	log.Fatal(http.ListenAndServe(":54321", router))
 }

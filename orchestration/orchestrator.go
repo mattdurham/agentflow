@@ -12,6 +12,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/go-kit/kit/log"
 	"strings"
+	"time"
 )
 
 type Orchestrator struct {
@@ -182,4 +183,21 @@ func (u *Orchestrator) GenerateMermaid() string {
 		}
 	}
 	return sb.String()
+}
+
+func (u *Orchestrator) NodeList() []string {
+	nodes := make([]string, 0)
+	for n, _ := range u.nameToPID {
+		nodes = append(nodes, n)
+	}
+	return nodes
+}
+
+func (u *Orchestrator) GetNodeStatus(name string) []byte {
+	pid, found := u.nameToPID[name]
+	if !found {
+		return []byte("not found")
+	}
+	out, _ := u.rootContext.RequestFuture(pid, actorstate.State{}, 10*time.Second).Result()
+	return out.([]byte)
 }

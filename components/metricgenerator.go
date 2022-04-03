@@ -10,6 +10,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/scheduler"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"gopkg.in/yaml.v3"
 	"math/rand"
 	"time"
 )
@@ -20,8 +21,8 @@ type MetricGenerator struct {
 	out    []*actor.PID
 	self   *actor.PID
 	name   string
-	log log.Logger
-	index int
+	log    log.Logger
+	index  int
 }
 
 func (mg *MetricGenerator) Output() actorstate.InOutType {
@@ -36,7 +37,7 @@ func NewMetricGenerator(name string, cfg config.MetricGenerator, global *types.G
 	return &MetricGenerator{
 		config: cfg,
 		name:   name,
-		log: global.Log,
+		log:    global.Log,
 	}, nil
 }
 
@@ -68,15 +69,26 @@ func (mg *MetricGenerator) Receive(ctx actor.Context) {
 			copy(cpy, metrics)
 			ctx.Send(o, cpy)
 		}
-		_ = level.Info(mg.log).Log("msg","creating logs","length",len(metrics), "index", mg.index)
+		_ = level.Info(mg.log).Log("msg", "creating logs", "length", len(metrics), "index", mg.index)
 		mg.index++
+	case actorstate.State:
+		bb, _ := yaml.Marshal(&metricGeneratorState{
+			Cfg:    mg.config,
+			Status: "Healthy",
+		})
+		ctx.Respond(bb)
 	}
 }
 
 func (mg *MetricGenerator) makeMetrics() []pogo.Metric {
 	metrics := make([]pogo.Metric, 0)
 	for i := 0; i < 100; i++ {
-		metrics = append(metrics, pogo.NewMetric(fmt.Sprintf("gen_%d",i), rand.Float64(), time.Now(), nil, nil))
+		metrics = append(metrics, pogo.NewMetric(fmt.Sprintf("gen_%d", i), rand.Float64(), time.Now(), nil, nil))
 	}
 	return metrics
+}
+
+type metricGeneratorState struct {
+	Cfg config.MetricGenerator `yaml:"cfg,omitempty"`
+	Status string `yaml:"status,omitempty"`
 }
