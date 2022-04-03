@@ -81,5 +81,3 @@ graph LR
 	FILTER2 --> RW 
 	GITHUB --> RW 
 ```
-
-![](./assets/mermaid.png)
