@@ -11,13 +11,17 @@ type Node struct {
 	FilePath string   `yaml:"file_path,omitempty"`
 	Outputs  []string `yaml:"outputs,omitempty"`
 
-	MetricGenerator       *MetricGenerator   `yaml:"metric_generator,omitempty"`
-	MetricFilter          *MetricFilter      `yaml:"metric_filter,omitempty"`
-	FakeMetricRemoteWrite *FakeRemoteWrite   `yaml:"fake_metric_remote_write,omitempty"`
-	SimpleRemoteWrite     *SimpleRemoteWrite `yaml:"simple_metric_remote_write,omitempty"`
-	AgentLogs             *AgentLogs         `yaml:"agent_logs,omitempty"`
-	LogFileWriter         *LogFileWriter     `yaml:"log_file_writer,omitempty"`
-	Github                *Github            `yaml:"github,omitempty"`
+	MetricGenerator *MetricGenerator `yaml:"metric_generator,omitempty"`
+	MetricFilter    *MetricFilter    `yaml:"metric_filter,omitempty"`
+
+	AgentLogs     *AgentLogs     `yaml:"agent_logs,omitempty"`
+	LogFileWriter *LogFileWriter `yaml:"log_file_writer,omitempty"`
+
+	Github *Github `yaml:"github,omitempty"`
+
+	FakeMetricRemoteWrite *FakeRemoteWrite       `yaml:"fake_metric_remote_write,omitempty"`
+	SimpleRemoteWrite     *SimpleRemoteWrite     `yaml:"simple_metric_remote_write,omitempty"`
+	PrometheusRemoteWrite *PrometheusRemoteWrite `yaml:"prometheus_remote_write,omitempty"`
 }
 
 type MetricGenerator struct {
@@ -59,6 +63,13 @@ type LogFileWriter struct {
 }
 
 type Github struct {
-	ApiURL string `yaml:"api_url,omitempty"`
+	ApiURL       string   `yaml:"api_url,omitempty"`
 	Repositories []string `yaml:"repositories,omitempty"`
+}
+
+type PrometheusRemoteWrite struct {
+	WalDir   string `yaml:"wal_dir,omitempty"`
+	URL      string `yaml:"url,omitempty"`
+	Username string `yaml:"username,omitempty"`
+	Password string `yaml:"password,omitempty"`
 }

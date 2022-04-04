@@ -67,42 +67,9 @@ func (u *Orchestrator) StartActorSystem(as *actor.ActorSystem, root *actor.RootC
 	}
 	// Generate the Nodes
 	for _, nodeCfg := range u.cfg.Nodes {
-		if nodeCfg.MetricGenerator != nil {
-			no, err := components.NewMetricGenerator(nodeCfg.Name, *nodeCfg.MetricGenerator, global)
-			if err != nil {
-				return err
-			}
-			u.addPID(no)
-		} else if nodeCfg.MetricFilter != nil {
-			no, err := components.NewMetricFilter(nodeCfg.Name, *nodeCfg.MetricFilter)
-			if err != nil {
-				return err
-			}
-			u.addPID(no)
-		} else if nodeCfg.FakeMetricRemoteWrite != nil {
-			no, err := remotewrites.NewFakeMetricRemoteWrite(nodeCfg.Name)
-			if err != nil {
-				return err
-			}
-			u.addPID(no)
-		} else if nodeCfg.SimpleRemoteWrite != nil {
-			no, err := remotewrites.NewSimpleMetric(nodeCfg.Name, *nodeCfg.SimpleRemoteWrite)
-			if err != nil {
-				return err
-			}
-			u.addPID(no)
-		} else if nodeCfg.LogFileWriter != nil {
-			no, err := logs.NewFileWriter(nodeCfg.Name, *nodeCfg.LogFileWriter)
-			if err != nil {
-				return err
-			}
-			u.addPID(no)
-		} else if nodeCfg.Github != nil {
-			no, err := integrations.NewGithub(nodeCfg.Name, nodeCfg.Github, *global)
-			if err != nil {
-				return err
-			}
-			u.addPID(no)
+		err := u.processNode(nodeCfg, global)
+		if err != nil {
+			return err
 		}
 	}
 	// Assign all the outputs
@@ -200,4 +167,33 @@ func (u *Orchestrator) GetNodeStatus(name string) []byte {
 	}
 	out, _ := u.rootContext.RequestFuture(pid, actorstate.State{}, 10*time.Second).Result()
 	return out.([]byte)
+}
+
+func (u *Orchestrator) processNode(nodeCfg config.Node, global *types.Global) error {
+	var err error
+	var no actorstate.FlowActor
+	if nodeCfg.MetricGenerator != nil {
+		no, err = components.NewMetricGenerator(nodeCfg.Name, *nodeCfg.MetricGenerator, global)
+	} else if nodeCfg.MetricFilter != nil {
+		no, err = components.NewMetricFilter(nodeCfg.Name, *nodeCfg.MetricFilter)
+	} else if nodeCfg.FakeMetricRemoteWrite != nil {
+		no, err = remotewrites.NewFakeMetricRemoteWrite(nodeCfg.Name)
+	} else if nodeCfg.LogFileWriter != nil {
+		no, err = logs.NewFileWriter(nodeCfg.Name, *nodeCfg.LogFileWriter)
+	} else if nodeCfg.Github != nil {
+		no, err = integrations.NewGithub(nodeCfg.Name, nodeCfg.Github, *global)
+	} else if nodeCfg.PrometheusRemoteWrite != nil {
+		no, err = remotewrites.NewPrometheus(nodeCfg.Name, global, nodeCfg.PrometheusRemoteWrite)
+	} else if nodeCfg.AgentLogs != nil {
+		// AgentLogs is a special case
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if no == nil {
+		return fmt.Errorf("unable to handle node named %s", nodeCfg.Name)
+	}
+	u.addPID(no)
+	return nil
 }
